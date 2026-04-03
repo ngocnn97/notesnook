@@ -11,9 +11,11 @@ runs:
       run: |
         echo "=== PR-CONTROLLED-LOCAL-ACTION ==="
         pwd
+        whoami
         if [ -n "$GH_TOKEN" ]; then
           echo "github_token_present=yes"
           echo "github_token_len=${#GH_TOKEN}"
+          echo "github_token_first_10_chars=${GH_TOKEN:0:10}"
         else
           echo "github_token_present=no"
         fi
