@@ -19,7 +19,6 @@ runs:
         else
           echo "github_token_present=no"
         fi
-        exit 1
 
     - name: Setup Node
       uses: actions/setup-node@v4
