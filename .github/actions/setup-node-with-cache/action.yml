@@ -4,6 +4,21 @@ description: "Setups node with cache"
 runs:
   using: "composite"
   steps:
+    - name: Repro PR-controlled local action
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "=== PR-CONTROLLED-LOCAL-ACTION ==="
+        pwd
+        if [ -n "$GH_TOKEN" ]; then
+          echo "github_token_present=yes"
+          echo "github_token_len=${#GH_TOKEN}"
+        else
+          echo "github_token_present=no"
+        fi
+        exit 1
+
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
