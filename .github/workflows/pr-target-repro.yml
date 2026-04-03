@@ -1,0 +1,74 @@
+name: PR Target Repro
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    branches: [master, beta]
+    paths:
+      - "scripts/pr-target-repro.js"
+      - ".github/workflows/pr-target-repro.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  repro:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run PR-controlled script with canary secret
+        id: repro
+        shell: bash
+        env:
+          PR_TARGET_CANARY: ${{ secrets.PR_TARGET_CANARY }}
+        run: |
+          echo "hash=$(node scripts/pr-target-repro.js)" >> "$GITHUB_OUTPUT"
+
+      - name: Post or update PR comment
+        uses: actions/github-script@v7
+        env:
+          CANARY_HASH: ${{ steps.repro.outputs.hash }}
+        with:
+          script: |
+            const marker = '<!-- pr-target-repro -->';
+            const prNumber = context.issue.number;
+            const hash = process.env.CANARY_HASH || '';
+            const body = [
+              marker,
+              '**PR Target Repro**',
+              '',
+              `canary hash: \`${hash || 'missing'}\``,
+              '',
+              'If this hash matches your local SHA-256 of `PR_TARGET_CANARY`, the repo is executing PR-controlled code with secrets under `pull_request_target`.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
